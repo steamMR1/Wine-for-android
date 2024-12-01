@@ -6,7 +6,9 @@ rm ~/x
 echo "Installing termux-am"
 pkg install termux-am -y &>/dev/null
 
-termux-setup-storage & sleep 4 &>/dev/null
+echo "Setting up storage for Termux"
+termux-setup-storage &>/dev/null
+sleep 4
 
 while true; do
     if [ -d ~/storage/shared ]; then
@@ -23,7 +25,7 @@ apt-get update >/dev/null 2>&1
 apt-get -y --with-new-pkgs -o Dpkg::Options::="--force-confdef" upgrade >/dev/null 2>&1
 pkg install x11-repo -y &>/dev/null
 pkg install pulseaudio -y &>/dev/null
-pkg install xwayland -y &>/dev/null
+pkg install xwayland -y &>/devnull
 pkg install wget -y &>/dev/null
 pkg install tsu -y &>/dev/null
 pkg install root-repo -y &>/dev/null

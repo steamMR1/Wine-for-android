@@ -20,7 +20,7 @@ echo "Installing essential termux packages"
 pkg clean
 pkg update -y
 pkg upgrade -y
-pkg install -y x11-repo pulseaudio xwayland wget tsu root-repo p7zip xorg-xrandr termux-x11-nightly
+pkg install -y x11-repo pulseaudio xwayland wget tsu root-repo p7zip xorg-xrandr termux-x11-nightly termux-x11
 
 echo "Downloading additional .deb packages"
 wget -O liblzma_5.6.0-1_aarch64.deb https://example.com/path/to/liblzma_5.6.0-1_aarch64.deb

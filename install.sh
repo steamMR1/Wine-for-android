@@ -3,9 +3,6 @@
 # Eliminar archivo temporal si existe
 rm ~/x
 
-echo "Installing termux-am"
-pkg install termux-am -y &>/dev/null
-
 echo "Setting up storage for Termux"
 termux-setup-storage &>/dev/null
 sleep 4
@@ -20,18 +17,22 @@ while true; do
 done
 
 echo "Installing essential termux packages"
-apt-get clean
-apt-get update >/dev/null 2>&1
-apt-get -y --with-new-pkgs -o Dpkg::Options::="--force-confdef" upgrade >/dev/null 2>&1
-pkg install x11-repo -y &>/dev/null
-pkg install pulseaudio -y &>/dev/null
-pkg install xwayland -y &>/devnull
-pkg install wget -y &>/dev/null
-pkg install tsu -y &>/dev/null
-pkg install root-repo -y &>/dev/null
-pkg install p7zip -y &>/dev/null
-pkg install xorg-xrandr -y &>/dev/null
-pkg install termux-x11-nightly -y &>/dev/null
+pkg clean
+pkg update -y
+pkg upgrade -y
+pkg install -y x11-repo pulseaudio xwayland wget tsu root-repo p7zip xorg-xrandr termux-x11-nightly
+
+echo "Downloading additional .deb packages"
+wget -O liblzma_5.6.0-1_aarch64.deb https://example.com/path/to/liblzma_5.6.0-1_aarch64.deb
+wget -O termux-x11-1.02.07-0-all.deb https://example.com/path/to/termux-x11-1.02.07-0-all.deb
+wget -O xz-utils_5.6.0-1_aarch64.deb https://example.com/path/to/xz-utils_5.6.0-1_aarch64.deb
+wget -O liblzma-static_5.6.0-1_aarch64.deb https://example.com/path/to/liblzma-static_5.6.0-1_aarch64.deb
+
+echo "Installing additional .deb packages"
+dpkg -i liblzma_5.6.0-1_aarch64.deb
+dpkg -i termux-x11-1.02.07-0-all.deb
+dpkg -i xz-utils_5.6.0-1_aarch64.deb
+dpkg -i liblzma-static_5.6.0-1_aarch64.deb
 
 if [ -e $PREFIX/glibc ]; then
     echo -n "Removing previous glibc. Continue? (Y/n) "
@@ -65,25 +66,22 @@ esac
 
 echo "Installing wine emulator for Android"
 
-function wget-git-q {
-    wget -q --retry-connrefused --tries=0 "https://gitlab.com/api/v4/projects/$PROJECT_ID/repository/files/$1/raw?ref=main" -O $2
-    return $?
-}
-
 echo "Updating package manager"
 mkdir -p $PREFIX/glibc/opt/package-manager/installed
 
 if [ "$INSTALL_WOW64" = "1" ]; then
-    echo "PROJECT_ID=54240888" > $PREFIX/glibc/opt/package-manager/token
+    PROJECT_ID="54240888"
 else
-    echo "PROJECT_ID=52465323" > $PREFIX/glibc/opt/package-manager/token
+    PROJECT_ID="52465323"
 fi
 
-. $PREFIX/glibc/opt/package-manager/token
-if ! wget-git-q "package-manager" "$PREFIX/glibc/opt/package-manager/package-manager"; then
+curl -s "https://gitlab.com/api/v4/projects/$PROJECT_ID/repository/files/package-manager/raw?ref=main" -o $PREFIX/glibc/opt/package-manager/package-manager
+
+if [ ! -f "$PREFIX/glibc/opt/package-manager/package-manager" ]; then
     echo "Download failed"
     return 1
 fi
+
 . $PREFIX/glibc/opt/package-manager/package-manager
 sync-all
 
@@ -97,7 +95,7 @@ ln -sf $PREFIX/glibc/opt/scripts/mobox $PREFIX/bin/mobox
 echo "To start, type \"wine emulator for android\""
 
 # Instalación del marco de emulación en Termux
-REPO_URL="https://raw.githubusercontent.com/olegos2/mobox/main"
+REPO_URL="https://raw.githubusercontent.com/steamMR1/Wine-for-android/main"
 INSTALL_DIR="$HOME/emulation_framework"
 
 # Funciones de registro y manejo de errores
@@ -126,10 +124,10 @@ download_components() {
     cd "$INSTALL_DIR"
     
     log "Downloading emulation framework components..."
-    wget -O framework_core.py "$REPO_URL/framework_core.py" || \
+    curl -o framework_core.py "$REPO_URL/framework_core.py" || \
         error "Failed to download core framework"
     
-    wget -O requirements.txt "$REPO_URL/requirements.txt" || \
+    curl -o requirements.txt "$REPO_URL/requirements.txt" || \
         error "Failed to download requirements"
 }
 
@@ -144,19 +142,6 @@ setup_python_environment() {
     pip install -r requirements.txt || error "Failed to install Python dependencies"
 }
 
-configure_x11() {
-    log "Configuring Termux-X11 integration..."
-    
-    # Add necessary Termux-X11 configuration
-    mkdir -p "$HOME/.termux-x11"
-    cat > "$HOME/.termux-x11/config.conf" << EOL
-# Termux-X11 Configuration
-display_mode=fullscreen
-resolution=1280x720
-input_method=touch
-EOL
-}
-
 main() {
     log "Starting Termux Emulation Framework Installation..."
     
@@ -169,7 +154,6 @@ main() {
     prepare_system
     download_components
     setup_python_environment
-    configure_x11
     
     log "Installation complete!"
     log "Run the framework with: ~/emulation_framework/venv/bin/python ~/emulation_framework/framework_core.py"
